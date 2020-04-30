@@ -12,6 +12,7 @@ from cloudmersive_extract import predict
 from ResumeParser.main import transform
 from text_summariser import generate_summary
 from ResumeAndFeedbackClassifier.test import classify
+
 app = Flask(__name__)
 api= Api(app)
 app.config['SECRET_KEY']='mysecretkey'
@@ -38,14 +39,52 @@ class Classifier(Resource):
         file_path = os.path.join('uploads', secure_filename(f.filename))
         print(file_path)
         f.save(file_path)
-        reg_dic = extract(file_path)                                            
-        headers = {'Content-Type':'text/html'}
-        return make_response(render_template('registration.html',text_data=reg_dic),200,headers)
+        reg_dic = extract(file_path) 
+
+        if classify(reg_dic) == 1:
+            senti_output = predict(reg_dic,True)
+            print(senti_output)
+            headers = {'Content-Type':'text/html'}
+            # return make_response(render_template('sentimental.html',text_data=senti_output),200,headers)
+            return redirect(url_for('sentimental',text_data=senti_output),code=307)
+        elif classify(reg_dic) == 2:
+            dic = dict()
+            nlp = spacy.load('en')
+            dic = transform(dic, nlp,reg_dic)
+            for x in dic[0]:
+                if type(dic[0][x]) == set:
+                    dic[0][x] = list(dic[0][x])
+            # dic[0] is tuple of lists(which contains key-value pair)
+            print('DATA CONTENT OF DIC[0]',dic[0])
+            headers = {'Content-Type':'text/html'}
+            keys = []
+            values = []
+            count = 0
+            with open('top_skills.csv', 'r') as csvfile: 
+                csvreader = csv.reader(csvfile) 
+                for row in csvreader:
+                    if count==0:
+                        keys = row
+                        count = count+1
+                    else:
+                        values = row
+            print('keys',keys)
+            print('values',values)
+            skills = []
+            for i in range(len(keys)): 
+                skills.append([keys[i],values[i]]) 
+            print('skills',skills)
+            # return make_response(render_template('resume.html',text_data=dic[0],skills=skills),200,headers)
+            return redirect(url_for('resume',text_data=dic[0],skills=skills),code=307)
+        else:
+            output = 3
+            headers = {'Content-Type':'text/html'}
+            return make_response(render_template('classifier.html',text_data=output),200,headers)
 
     def get(self):
         headers = {'Content-Type':'text/html'}
         dic = dict()
-        return make_response(render_template('registration.html',data=dic),200,headers)
+        return make_response(render_template('classifier.html',data=dic,flag=0),200,headers)
 
 
 class Resume(Resource):
@@ -101,6 +140,7 @@ class Sentimental(Resource):
         f.save(file_path)
         reg_dic = extract(file_path)     
         senti_output = predict(reg_dic,True)
+        print(senti_output)
         headers = {'Content-Type':'text/html'}
         return make_response(render_template('sentimental.html',text_data=senti_output),200,headers)
 
