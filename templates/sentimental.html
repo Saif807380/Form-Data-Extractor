@@ -74,8 +74,12 @@
                 <div class="au-chat__title">
                   <div class="au-chat-info">
                     <span class="nick">
+                      <br>
                       {% for i in text_data %}
-                      <h4>{{i}} - {{ text_data[i] }}</h4>
+                      <h4 class="title-4" style = "text-transform:capitalize;">{{i}}</h4>
+                      <hr class="line-seprate">
+                      <li >{{ text_data[i] }}</li>
+                      <br>
                       {% endfor %}
                     </span>
                   </div>
@@ -83,7 +87,7 @@
                 <div class="au-chat-textfield">
                   <form class="au-form-icon">
                     <button class="au-input-icon">
-                      <i class="zmdi zmdi-camera"></i>
+                      <i class="zmdi zmdi-download"></i>
                     </button>
                   </form>
                 </div>
