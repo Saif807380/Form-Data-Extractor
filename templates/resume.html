@@ -70,30 +70,33 @@
                 <div class="au-chat__title">
                   <div class="au-chat-info">
                     <span class="nick">
-                      <h1>Resume</h1>
+                      <h1 class="title-4">Resume Data</h1>
+                      <hr class="line-seprate">
+                      <br />
                       {% for i in text_data: %}
-                      <li>{{ i }} -</li>
                       {% for j in text_data[i]%}
-                      <li>{{ j }}</li>
-                      <br />
-                      {% endfor %} {% endfor %}
-                      <h1>END</h1>
-                      <br />
-                    </span>
-                    <span class="nick">
-                      <h1>Resume</h1>
-                      {% for i in skills: %}
-                      <li>{{ i[0] }} - {{ i[1] }}</li>
+                      <li style = "text-transform:capitalize;">{{ i }} - {{ j }} </li>
+                      {% endfor %} 
                       {% endfor %}
-                      <h1>END</h1>
-                      <br />
+                  </div>
+                  <div class="au-chat-info">
+                    <span class="nick">
+                      <h1 class="title-4">Skills</h1>
+                      <hr class="line-seprate">
+                      <div>
+                        <br />
+                        {% for i in skills: %}
+                        <li>{{ i[0] }}</li>
+                        {% endfor %}
+                        <br />
+                      </div>
                     </span>
                   </div>
                 </div>
                 <div class="au-chat-textfield">
                   <form class="au-form-icon">
                     <button class="au-input-icon">
-                      <i class="zmdi zmdi-camera"></i>
+                      <i class="zmdi zmdi-download"></i>
                     </button>
                   </form>
                 </div>
