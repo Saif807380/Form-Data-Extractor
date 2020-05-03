@@ -17,8 +17,8 @@ from flask import session
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = 'tata2000@P'
-app.config['MYSQL_DB']	= 'flutter'
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB']	= 'team6nn'
 mysql = MySQL(app)
 api = Api(app)
 
@@ -261,18 +261,90 @@ class Inbox(Resource):
 
 class Logout(Resource):
     def get(self):
+      
         session.pop('logged_in', None)
 
+class AppVoice(Resource):
+
+    
+   def post(self):
+      data = request.get_json()
+      s=data                               
+      palak=s['data']
+      email=s['email'] 
+      emailj=''
+      print(email)
+      for i in email:
+         if i == '@':
+            break
+         else:
+            emailj=emailj+i
+      emailt = "".join((str(emailj),"voice"))
+      print(emailt)
+   
+      print("hrllo")
+      print(palak)
+      cur = mysql.connection.cursor()
+      temp="CREATE TABLE if not exists "+emailt+" (voiceform varchar(2000))"
+      cur.execute(temp)
+      for i in palak:
+         print(i)
+         sql = "INSERT INTO "+emailt+" VALUES (%s)"
+         cur.execute(sql,[i])
+      mysql.connection.commit()
+   
+            
+      return {"message": "voice done"}, 201
+
+
+class AppRetrieveVoice(Resource):
+
+    
+   def post(self):
+      data = request.get_json()
+      email = data['email']
+      emailj=''
+      print(email)
+      for i in email:
+         if i == '@':
+            break
+         else:
+            emailj=emailj+i
+      emailt = "".join((str(emailj),"voice"))
+      string = "SELECT * FROM "+emailt+""
+      cur = mysql.connection.cursor()
+      cur.execute(string)
+      row = [item[0] for item in cur.fetchall()]
+      #response = cur.fetchall()
+      print(row)
+      ans={'data':row}
+      print(ans)
+      return ans
+
+class AppFormDetails(Resource):
+
+    
+   def post(self):
+      data = request.get_json()
+      print(data)
+      #generate pdf @saif
+      return {"message": "voice done"}, 201
+
+
+#jwt = JWT(app, authenticate, identity)
 api.add_resource(UserRegister, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(Dashboard, '/')
 api.add_resource(Inbox, '/inbox')
-api.add_resource(Inbox, '/logout')
 api.add_resource(Classifier, '/classifier')
 api.add_resource(Resume, '/resume')
 api.add_resource(Sentimental, '/sentimental') #feedback
 api.add_resource(Summarizer, '/summarizer')
+api.add_resource(Inbox, '/logout')
+api.add_resource(AppVoice, '/createvoicefields')
+api.add_resource(AppRetrieveVoice, '/getvoicefields')
+api.add_resource(AppFormDetails, '/getformdetails')
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,port=5000)
