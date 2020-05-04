@@ -1,5 +1,6 @@
-from flask import Flask, render_template, redirect, url_for, request, make_response
+from flask import Flask, render_template, redirect, url_for, request, make_response, session
 from flask_restful import Resource, Api, reqparse
+from flask_mysqldb import MySQL
 import spacy
 import pandas as pd
 import json
@@ -12,19 +13,74 @@ from cloudmersive_extract import predict
 from ResumeParser.main import transform
 from text_summariser import generate_summary
 from ResumeAndFeedbackClassifier.test import classify
-from flask_mysqldb import MySQL
-from flask import session
+from VoiceForm import VoiceForm
+
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_PASSWORD'] = 'Enter your password here'
 app.config['MYSQL_DB']	= 'team6nn'
 mysql = MySQL(app)
 api = Api(app)
 
 app.config['SECRET_KEY']='mysecretkey'
-
 nlp=spacy.load('en_core_web_sm')
+
+class AppUserLogin(Resource):
+    
+   def post(self):
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+        print(email)
+        emailt=''
+        for i in email:
+         if i == '@':
+            break
+         else:
+            emailt=emailt+i
+        print(emailt)
+        result=""
+        try:
+            string = "SELECT * FROM "+emailt+" WHERE email = '"+email+"' and password ='"+password+"' "
+            cur = mysql.connection.cursor()
+            cur.execute(string)
+            result = cur.fetchall()
+            print(result)
+        finally:
+            if result == "":
+                  return {"email":email,"result":result,"logged":0}, 201
+            else:
+               return {"email":email,"result":result,"logged":1}, 201 
+
+class AppUserRegister(Resource):
+
+    
+   def post(self):
+      data = request.get_json()
+       
+      name = data['name']
+      email = data['email']
+      password = data['password']
+      typee = data['type']
+      emailt=''
+      for i in email:
+         if i == '@':
+            break
+         else:
+            emailt=emailt+i
+      print(emailt) 
+
+      cur = mysql.connection.cursor()
+      temp="CREATE TABLE if not exists "+emailt+" (id int PRIMARY KEY AUTO_INCREMENT, email varchar(200),name varchar(200), password varchar(200),type varchar(200))"
+      cur.execute(temp)
+      flag="INSERT INTO "+emailt+" (email,name,password,type) VALUES(%s,%s,%s,%s)"
+      cur.execute(flag,(email,name,password,typee))
+      mysql.connection.commit()
+      return {"message": "User created successfully."}, 201
+
+
+
 class UserLogin(Resource):
 
     def post(self):
@@ -57,7 +113,9 @@ class UserLogin(Resource):
                     text=text+word[0]
                 session['email']=email
                 session['logged_in']=True
-                return redirect(url_for('dashboard', user_name=result[0][2],initials=text),code=307)
+                session['user_name']=result[0][2]
+                session['initials'] = text
+                return redirect(url_for('dashboard'))
     
     def get(self):
         headers = {'Content-Type': 'text/html'}
@@ -104,13 +162,13 @@ class Dashboard(Resource):
         pass
     def post(self):
         headers = {'Content-Type': 'text/html'}
-        return make_response(render_template('index2.html',user_name=user_name,initials=initials),200,headers)
+        return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials']),200,headers)
 
     
     def get(self):
         if session.get('logged_in') == True:
             headers = {'Content-Type': 'text/html'}
-            return make_response(render_template('index2.html',user_name="",initials=""),200,headers)
+            return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials']),200,headers)
 
            
         else:
@@ -282,7 +340,7 @@ class AppVoice(Resource):
       emailt = "".join((str(emailj),"voice"))
       print(emailt)
    
-      print("hrllo")
+      
       print(palak)
       cur = mysql.connection.cursor()
       temp="CREATE TABLE if not exists "+emailt+" (voiceform varchar(2000))"
@@ -323,11 +381,12 @@ class AppRetrieveVoice(Resource):
 
 class AppFormDetails(Resource):
 
-    
    def post(self):
-      data = request.get_json()
+      data = request.get_json() #generate pdf @saif
       print(data)
-      #generate pdf @saif
+      form = VoiceForm()
+      path_to_pdf = form.generatePDF(data)
+      form.sendEmail(data['email'],path_to_pdf)
       return {"message": "voice done"}, 201
 
 
@@ -340,11 +399,12 @@ api.add_resource(Classifier, '/classifier')
 api.add_resource(Resume, '/resume')
 api.add_resource(Sentimental, '/sentimental') #feedback
 api.add_resource(Summarizer, '/summarizer')
-api.add_resource(Inbox, '/logout')
+api.add_resource(Logout, '/logout')
 api.add_resource(AppVoice, '/createvoicefields')
 api.add_resource(AppRetrieveVoice, '/getvoicefields')
 api.add_resource(AppFormDetails, '/getformdetails')
-
+api.add_resource(AppUserRegister,'/appregister')
+api.add_resource(AppUserLogin,'/applogin')
 
 if __name__ == "__main__":
     app.run(debug=True,port=5000)
