@@ -10,7 +10,7 @@ from cloudmersive_ocr_api_client.rest import ApiException
 def extract(image_file):
     api_instance = cloudmersive_ocr_api_client.ImageOcrApi()
     api_instance.api_client.configuration.api_key = {}
-    api_instance.api_client.configuration.api_key['Apikey'] = 'd7dc7ce6-2e6e-4627-b9ab-e654582d9f21'
+    api_instance.api_client.configuration.api_key['Apikey'] = '0ab6b0bb-a40e-4ccf-8c3d-b336160c0cdd'
     try:
         # Converts an uploaded image in common formats such as JPEG, PNG into text via Optical Character Recognition.
         

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, make_response, session
+from flask import Flask, render_template, redirect, url_for, request, make_response, session, jsonify
 from flask_restful import Resource, Api, reqparse
 from flask_mysqldb import MySQL
 import spacy
@@ -15,16 +15,19 @@ from text_summariser import generate_summary
 from ResumeAndFeedbackClassifier.test import classify
 from VoiceForm import VoiceForm
 
+os.environ['KERAS_BACKEND']='tensorflow'
+
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_PASSWORD'] = 'Arrow807380'
 app.config['MYSQL_DB']	= 'team6nn'
 mysql = MySQL(app)
 api = Api(app)
 
 app.config['SECRET_KEY']='mysecretkey'
 nlp=spacy.load('en_core_web_sm')
+
 
 class AppUserLogin(Resource):
     
@@ -162,13 +165,13 @@ class Dashboard(Resource):
         pass
     def post(self):
         headers = {'Content-Type': 'text/html'}
-        return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials']),200,headers)
+        return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials'],title="Dashboard"),200,headers)
 
     
     def get(self):
         if session.get('logged_in') == True:
             headers = {'Content-Type': 'text/html'}
-            return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials']),200,headers)
+            return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials'],title="Dashboard"),200,headers)
 
            
         else:
@@ -187,8 +190,16 @@ class Classifier(Resource):
             senti_output = predict(reg_dic,True)
             print(senti_output)
             headers = {'Content-Type':'text/html'}
-            # return make_response(render_template('sentimental.html',text_data=senti_output),200,headers)
-            return redirect(url_for('sentimental',text_data=senti_output),code=307)
+            try:
+                if(request.form["param"]=="1"):
+                    return jsonify({
+                        "data": {
+                            "sentiment_analysis":senti_output,
+                        },
+                        "from": "sentiment_analysis",
+                    })
+            except:
+                return redirect(url_for('sentimental',text_data=senti_output,user_name=session['user_name'],initials=session['initials'],title="Feedback Form"),code=307)
         elif classify(reg_dic) == 2:
             dic = dict()
             nlp = spacy.load('en')
@@ -196,7 +207,6 @@ class Classifier(Resource):
             for x in dic[0]:
                 if type(dic[0][x]) == set:
                     dic[0][x] = list(dic[0][x])
-            # dic[0] is tuple of lists(which contains key-value pair)
             print('DATA CONTENT OF DIC[0]',dic[0])
             headers = {'Content-Type':'text/html'}
             keys = []
@@ -216,22 +226,43 @@ class Classifier(Resource):
             for i in range(len(keys)): 
                 skills.append([keys[i],values[i]]) 
             print('skills',skills)
-            # return make_response(render_template('resume.html',text_data=dic[0],skills=skills),200,headers)
-            return redirect(url_for('resume',text_data=dic[0],skills=skills),code=307)
+            try:
+                if(request.form["param"]=="1"):
+                    return jsonify({
+                        "data": {
+                            "resume_data":dic[0],
+                            "top_skills": skills,
+                        },
+                        "from": "resume"
+                    })
+            except:
+                return redirect(url_for('resume',text_data=dic[0],skills=skills,user_name=session['user_name'],initials=session['initials'],title="Resume"),code=307)
         else:
             output = 3
             headers = {'Content-Type':'text/html'}
-            return make_response(render_template('classifier.html',text_data=output),200,headers)
+            try:
+                if request.form["param"]=="1":
+                    return jsonify({
+                        "data":{
+                            "classifier_data": output
+                        },
+                        "from": "classifier"
+                    })
+            except:
+                return make_response(render_template('classifier.html',text_data=output,user_name=session['user_name'],initials=session['initials'],title="Classify Form"),200,headers)
 
     def get(self):
         headers = {'Content-Type':'text/html'}
         dic = dict()
-        return make_response(render_template('classifier.html',data=dic,flag=0),200,headers)
+        return make_response(render_template('classifier.html',data=dic,flag=0,user_name=session['user_name'],initials=session['initials'],title="Classify Form"),200,headers)
 
 
 class Resume(Resource):
     def post(self):
+        print(type(request))
         f = request.files['file-name']
+        # print(request.form["param"])
+        # print(type(request.form['param']))
         basepath = os.path.dirname(__file__)
         file_path = os.path.join('uploads', secure_filename(f.filename))
         print(file_path)
@@ -263,13 +294,23 @@ class Resume(Resource):
         for i in range(len(keys)): 
             skills.append([keys[i],values[i]]) 
         print('skills',skills)
-        return make_response(render_template('resume.html',text_data=dic[0],skills=skills),200,headers)
+        try:
+            if(request.form["param"] is not None and request.form["param"]=="1"):
+                return jsonify({
+                    "data": {
+                        "resume_data":dic[0],
+                        "top_skills": skills,
+                    },
+                    "from":"resume"
+                })
+        except:
+            return make_response(render_template('resume.html',text_data=dic[0],skills=skills,user_name=session['user_name'],initials=session['initials'],title="Resume"),200,headers)
 
     def get(self):
         headers = {'Content-Type':'text/html'}
         dic={}
         skills = {}
-        return make_response(render_template('resume.html',text_data=dic,skills=skills),200,headers)
+        return make_response(render_template('resume.html',text_data=dic,skills=skills,user_name=session['user_name'],initials=session['initials'],title="Resume"),200,headers)
         
 
     
@@ -284,12 +325,21 @@ class Sentimental(Resource):
         senti_output = predict(reg_dic,True)
         print(senti_output)
         headers = {'Content-Type':'text/html'}
-        return make_response(render_template('sentimental.html',text_data=senti_output),200,headers)
+        try:
+            if(request.form["param"]=="1"):
+                return jsonify({
+                    "data": {
+                        "sentiment_analysis":senti_output,
+                    },
+                    "from": "sentiment_analysis",
+                })
+        except:
+            return make_response(render_template('sentimental.html',text_data=senti_output,user_name=session['user_name'],initials=session['initials'],title="Feedback Form"),200,headers)
 
     def get(self):
         headers = {'Content-Type':'text/html'}
         dic=""
-        return make_response(render_template('sentimental.html',text_data=dic),200,headers)
+        return make_response(render_template('sentimental.html',text_data=dic,user_name=session['user_name'],initials=session['initials'],title="Feedback Form"),200,headers)
 
 
 class Summarizer(Resource):
@@ -305,12 +355,21 @@ class Summarizer(Resource):
         text = generate_summary(doc,sents_in_summary)
         print(text)
         headers = {'Content-Type':'text/html'}
-        return make_response(render_template('summarizer.html',text_data=text),200,headers)
+        try:
+            if(request.form["param"]=="1"):
+                return jsonify({
+                    "data": {
+                        "summary":text,
+                    },
+                    "from": "summarizer",
+                })
+        except:
+            return make_response(render_template('summarizer.html',text_data=text,user_name=session['user_name'],initials=session['initials'],title="Summarize Text"),200,headers)
     
     def get(self):
         headers = {'Content-Type':'text/html'}
         data = ""
-        return make_response(render_template('summarizer.html',text_data=data),200,headers)
+        return make_response(render_template('summarizer.html',text_data=data,user_name=session['user_name'],initials=session['initials'],title="Summarize Text"),200,headers)
   
 class Inbox(Resource):
     def get(self):
@@ -439,4 +498,5 @@ api.add_resource(AppUserLogin,'/applogin')
 api.add_resource(AppEditProfile,'/appeditprofile')
 
 if __name__ == "__main__":
+    
     app.run(debug=True,port=5000)

@@ -10,7 +10,7 @@
     <meta name="keywords" content="au theme template">
 
     <!-- Title Page-->
-    <title>Dashboard</title>
+    <title>{{ title }}</title>
 
     <!-- Fontfaces CSS-->
     <link href="../static/css/font-face.css" rel="stylesheet" media="all">
@@ -48,46 +48,84 @@
     <div class="page-wrapper">
         <!-- MENU SIDEBAR-->
         <aside class="menu-sidebar2">
-            <div class="logo" style="background-color:rgb(106, 53, 230)">
-                <a href="#">
-                    <img src="../static/images/icon/logo-white.png" alt="Cool Admin" />
+            <div class="logo" style="background-color:rgb(106, 53, 230);align:center;">
+                <a href="#" style="text-align:center;">
+                    <!--<img src="../static/images/icon/logo-white.png" alt="Cool Admin" />-->
+                    <h2 style="color:white;text-align:center;margin-left:30px">Team 6NN<h1>
                 </a>
             </div>
             <div class="menu-sidebar2__content js-scrollbar1">
                 <div class="account2">
-                    <div class="img-cir img-120" style="background-color: rgb(201, 46, 240);">
-                        <h1 style="text-align:center; margin-top: 40px; color: white;">{{ initials }}</h1>
+                    <div class="img-cir img-120" style="background-color: #8f94fb;">
+                        <h1 style="text-align:center; margin-top: 15px; color: white; font-size:70px">{{ initials }}</h1>
                     </div>
                     <h4 class="name">{{ user_name }}</h4>
                     <a href="/logout">Sign out</a>
                 </div>
                 <nav class="navbar-sidebar2">
                     <ul class="list-unstyled navbar__list">
-                        <li class="active has-sub" >
-                            <a class="js-arrow" href="/" style="color:rgb(106, 53, 230)" >
-                                <i class="fas fa-tachometer-alt"></i>Dashboard
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/classifier" onMouseOver="this.style.color='rgb(106, 53, 230)'"
-                            onMouseOut="this.style.color='#000000'">
-                                <i class="fas fa-search"></i> Hardcory</a>
-                        </li>
-                        <li>
-                            <a href="/resume" onMouseOver="this.style.color='rgb(106, 53, 230)'"
-                            onMouseOut="this.style.color='#000000'">
+                        {% if title=="Dashboard" %}
+                            <li>
+                                <a href="/" style="color:rgb(106, 53, 230)">
+                                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                                </a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="/" onMouseOver="this.style.color='rgb(106, 53, 230)'"onMouseOut="this.style.color='#000000'">
+                                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% if title=="Classify Form" %}
+                            <li>
+                                <a href="/classifier" style="color:rgb(106, 53, 230)">
+                                <i class="fas fa-search"></i>Hardcopy</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="/classifier" onMouseOver="this.style.color='rgb(106, 53, 230)'"onMouseOut="this.style.color='#000000'">
+                                <i class="fas fa-search"></i>Hardcopy</a>
+                            </li>
+                        {% endif %}
+
+                        {% if title=="Resume" %}
+                            <li>
+                                <a href="/resume" style="color:rgb(106, 53, 230)">
                                 <i class="fas fa-address-card"></i>Resume</a>
-                        </li>
-                        <li>
-                            <a href="/sentimental" onMouseOver="this.style.color='rgb(106, 53, 230)'"
-                            onMouseOut="this.style.color='#000000'">
-                                <i class="fas fa-thumbs-up"></i>Feedback</a>
-                        </li>
-                        <li>
-                            <a href="/summarizer" onMouseOver="this.style.color='rgb(106, 53, 230)'"
-                            onMouseOut="this.style.color='#000000'">
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="/resume" onMouseOver="this.style.color='rgb(106, 53, 230)'"onMouseOut="this.style.color='#000000'">
+                                <i class="fas fa-address-card"></i>Resume</a>
+                            </li>
+                        {% endif %}
+
+                        {% if title=="Feedback Form" %}
+                            <li>
+                                <a href="/sentimental" style="color:rgb(106, 53, 230)">
+                                <i class="fas fa-thumbs-up"></i>Feedback Form</a>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="/sentimental" onMouseOver="this.style.color='rgb(106, 53, 230)'"onMouseOut="this.style.color='#000000'">
+                                <i class="fas fa-thumbs-up"></i>Feedback Form</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if title=="Summarize Text" %}
+                            <li>
+                                <a href="/summarizer" style="color:rgb(106, 53, 230)">
                                 <i class="fas fa-chart-bar"></i>Summarize</a>
-                        </li>
+                            </li>
+                        {% else %}
+                            <li>
+                                <a href="/summarizer" onMouseOver="this.style.color='rgb(106, 53, 230)'"onMouseOut="this.style.color='#000000'">
+                                <i class="fas fa-chart-bar"></i>Summarize</a>
+                            </li>
+                        {% endif %}
+                        
                         <!--
                         <li>
                             <a href="/inbox">
@@ -211,7 +249,7 @@
         <div class="page-container2">
             <!-- HEADER DESKTOP-->
             <header class="header-desktop2" style="background-color:#8f94fb">
-                <div class="section__content section__content--p30">
+                <!--<div class="section__content section__content--p30">
                     <div class="container-fluid">
                         <div class="header-wrap2" style="color:#8f94fb">
                             <div class="logo d-block d-lg-none">
@@ -309,9 +347,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
             </header>
-            <aside class="menu-sidebar2 js-right-sidebar d-block d-lg-none">
+            <!--<aside class="menu-sidebar2 js-right-sidebar d-block d-lg-none">
                 <div class="logo">
                     <a href="#">
                         <img src="../static/images/icon/logo-white.png" alt="Cool Admin" />
@@ -446,12 +484,10 @@
                         </ul>
                     </nav>
                 </div>
-            </aside>
+            </aside>-->
             <!-- END HEADER DESKTOP-->
 
             <!-- BREADCRUMB-->
-
-            
             <!-- END BREADCRUMB-->
             {% block content %}
             <!-- STATISTIC-->
@@ -514,12 +550,12 @@
             </section>
             <!-- END STATISTIC-->
 
-            <section>
+            <!--<section>
                 <div class="section__content section__content--p30">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-xl-8">
-                                <!-- RECENT REPORT 2-->
+                                 RECENT REPORT 2
                                 <div class="recent-report2">
                                     <h3 class="title-3">recent reports</h3>
                                     <div class="chart-info">
@@ -556,10 +592,10 @@
                                         <canvas id="recent-rep2-chart"></canvas>
                                     </div>
                                 </div>
-                                <!-- END RECENT REPORT 2             -->
+                                END RECENT REPORT 2 
                             </div>
                             <div class="col-xl-4">
-                                <!-- TASK PROGRESS-->
+                                 TASK PROGRESS
                                 <div class="task-progress">
                                     <h3 class="title-3">task progress</h3>
                                     <div class="au-skill-container">
@@ -597,19 +633,19 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- END TASK PROGRESS-->
+                                 END TASK PROGRESS
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </section>-->
 
-            <section>
+            <!--<section>
                 <div class="section__content section__content--p30">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-xl-6">
-                                <!-- USER DATA-->
+                                USER DATA
                                 <div class="user-data m-b-40">
                                     <h3 class="title-3 m-b-30">
                                         <i class="zmdi zmdi-account-calendar"></i>user data</h3>
@@ -791,10 +827,10 @@
                                         <button class="au-btn au-btn-load">load more</button>
                                     </div>
                                 </div>
-                                <!-- END USER DATA-->
+                                END USER DATA
                             </div>
                             <div class="col-xl-6">
-                                <!-- MAP DATA-->
+                                MAP DATA
                                 <div class="map-data m-b-40">
                                     <h3 class="title-3 m-b-30">
                                         <i class="zmdi zmdi-map"></i>map data</h3>
@@ -858,26 +894,27 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- END MAP DATA-->
+                                END MAP DATA
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </section>-->
 
+            
+            {% endblock %}
             <section>
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="copyright">
-                                <p>Copyright © 2020 Colorlib. All rights reserved. Template by 6-NN.</p>
+                                <p>Copyright © 2020 Colorlib. All rights reserved. Template by 6NN.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
             <!-- END PAGE CONTAINER-->
-            {% endblock %}
         </div>
 
     </div>
