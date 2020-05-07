@@ -18,7 +18,7 @@ from VoiceForm import VoiceForm
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = 'Enter your password here'
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB']	= 'team6nn'
 mysql = MySQL(app)
 api = Api(app)
@@ -94,7 +94,7 @@ class UserLogin(Resource):
          else:
             emailt=emailt+i
         print(emailt)
-        result=""
+        result=()
         try:
             string = "SELECT * FROM "+emailt+" WHERE email = '"+email+"' and password ='"+password+"' "
             cur = mysql.connection.cursor()
@@ -102,7 +102,7 @@ class UserLogin(Resource):
             result = cur.fetchall()
             print(result)
         finally:
-            if result == "":
+            if len(result)== 0:
                 session['login']='0'
                 return redirect(url_for('userlogin'))
             else:
@@ -321,6 +321,7 @@ class Logout(Resource):
     def get(self):
       
         session.pop('logged_in', None)
+        return redirect(url_for('userlogin'))
 
 class AppVoice(Resource):
 
@@ -390,6 +391,36 @@ class AppFormDetails(Resource):
       return {"message": "voice done"}, 201
 
 
+class AppEditProfile(Resource):
+
+   def post(self):
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+        name=data['username']
+        print(name)
+        print(email)
+        emailt=''
+        result=""
+        for i in email:
+         if i == '@':
+            break
+         else:
+            emailt=emailt+i
+        print(emailt)
+        print("==================")
+        try:
+            string="UPDATE "+emailt+" SET name='"+name+"',password='"+password+"' WHERE email='"+email+"'"
+            print(string)
+            cur = mysql.connection.cursor()
+            cur.execute(string)
+            mysql.connection.commit()
+        
+        finally:
+            return {"message": "updated information"}, 201
+
+            
+
 #jwt = JWT(app, authenticate, identity)
 api.add_resource(UserRegister, '/register')
 api.add_resource(UserLogin, '/login')
@@ -405,6 +436,7 @@ api.add_resource(AppRetrieveVoice, '/getvoicefields')
 api.add_resource(AppFormDetails, '/getformdetails')
 api.add_resource(AppUserRegister,'/appregister')
 api.add_resource(AppUserLogin,'/applogin')
+api.add_resource(AppEditProfile,'/appeditprofile')
 
 if __name__ == "__main__":
     app.run(debug=True,port=5000)
