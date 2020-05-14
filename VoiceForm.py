@@ -8,9 +8,9 @@ from flask import render_template
 
 class VoiceForm:
 
-    config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
-    sender_address = 'team6nn@gmail.com'
-    sender_pass = 'yehHackathontohHuahiNahi'
+    config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf') # add path to wkhtmlpdf
+    sender_address = 'youremail'
+    sender_pass = 'yourpassword'
 
     def __init__(self):
         print("")

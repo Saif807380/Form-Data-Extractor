@@ -1,3 +1,12 @@
 /env
 requirements.txt
 requirements_terna.txt
+model.h5
+tokenizer.pkl
+/_pychache_
+/ResumeAndFeedbackClassifier/_pychache_
+*.pyc
+*.png
+*.jpg
+*.jpeg
+*.pdf

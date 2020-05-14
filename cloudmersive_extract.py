@@ -35,10 +35,5 @@ def predict(text, include_neutral=True):
     return {"label": label, "score": float(score)}
 
 
-# from textblob import TextBlob, Word, Blobber
-
-# t = TextBlob(text)
-# t.sentiment
-
 
 

@@ -20,96 +20,70 @@ os.environ['KERAS_BACKEND']='tensorflow'
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = 'Arrow807380'
-app.config['MYSQL_DB']	= 'team6nn'
+app.config['MYSQL_PASSWORD'] = 'yourpasswordhere'
+app.config['MYSQL_DB']	= 'team6nn' # manually create this database in mysql
 mysql = MySQL(app)
 api = Api(app)
 
-app.config['SECRET_KEY']='mysecretkey'
+app.config['SECRET_KEY']='614E645267556B58703273357638792F'
 nlp=spacy.load('en_core_web_sm')
 
 
-class AppUserLogin(Resource):
-    
-   def post(self):
-        data = request.get_json()
-        email = data['email']
-        password = data['password']
-        print(email)
-        emailt=''
-        for i in email:
-         if i == '@':
-            break
-         else:
-            emailt=emailt+i
-        print(emailt)
-        result=""
-        try:
-            string = "SELECT * FROM "+emailt+" WHERE email = '"+email+"' and password ='"+password+"' "
-            cur = mysql.connection.cursor()
-            cur.execute(string)
-            result = cur.fetchall()
-            print(result)
-        finally:
-            if result == "":
-                  return {"email":email,"result":result,"logged":0}, 201
-            else:
-               return {"email":email,"result":result,"logged":1}, 201 
+def serialize_sets(obj):
+    if isinstance(obj, set):
+        return list(obj)
 
-class AppUserRegister(Resource):
+    return obj
 
+
+class UserRegister(Resource):
     
-   def post(self):
-      data = request.get_json()
-       
-      name = data['name']
-      email = data['email']
-      password = data['password']
-      typee = data['type']
-      emailt=''
+    def post(self):
+      name = request.form['name']
+      email = request.form['email']
+      password = request.form['password']
+      typee = request.form['type']
+      email_string=''
       for i in email:
-         if i == '@':
+         if i == '@': 
             break
          else:
-            emailt=emailt+i
-      print(emailt) 
+            email_string=email_string+i
 
       cur = mysql.connection.cursor()
-      temp="CREATE TABLE if not exists "+emailt+" (id int PRIMARY KEY AUTO_INCREMENT, email varchar(200),name varchar(200), password varchar(200),type varchar(200))"
+      temp="CREATE TABLE if not exists "+email_string+" (id int PRIMARY KEY AUTO_INCREMENT, email varchar(200),name varchar(200), password varchar(200),type varchar(200))"
       cur.execute(temp)
-      flag="INSERT INTO "+emailt+" (email,name,password,type) VALUES(%s,%s,%s,%s)"
+      flag="INSERT INTO "+email_string+" (email,name,password,type) VALUES(%s,%s,%s,%s)"
       cur.execute(flag,(email,name,password,typee))
       mysql.connection.commit()
-      return {"message": "User created successfully."}, 201
+      return redirect(url_for('userlogin')) 
 
-
+    def get(self):
+        headers = {'Content-Type': 'text/html'}
+        return make_response(render_template('register.html'),200,headers)
 
 class UserLogin(Resource):
-
+    
     def post(self):
         email =request.form['email']
         password = request.form['password']
-        print(email)
-        emailt=''
+        email_string=''
         for i in email:
          if i == '@':
             break
          else:
-            emailt=emailt+i
-        print(emailt)
+            email_string=email_string+i
         result=()
         try:
-            string = "SELECT * FROM "+emailt+" WHERE email = '"+email+"' and password ='"+password+"' "
+            string = "SELECT * FROM "+email_string+" WHERE email = '"+email+"' and password ='"+password+"' "
             cur = mysql.connection.cursor()
             cur.execute(string)
             result = cur.fetchall()
-            print(result)
         finally:
             if len(result)== 0:
                 session['login']='0'
                 return redirect(url_for('userlogin'))
             else:
-                print(result)
                 words = result[0][2].split()
                 text = ""
                 for word in words:
@@ -124,41 +98,6 @@ class UserLogin(Resource):
         headers = {'Content-Type': 'text/html'}
         return make_response(render_template('login.html'),200,headers)
 
-class UserRegister(Resource):
-    
-    def post(self):
-      name = request.form['name']
-      email = request.form['email']
-      password = request.form['password']
-      typee = request.form['type']
-      emailt=''
-      for i in email:
-         if i == '@': 
-            break
-         else:
-            emailt=emailt+i
-      print(emailt) 
-
-      cur = mysql.connection.cursor()
-      temp="CREATE TABLE if not exists "+emailt+" (id int PRIMARY KEY AUTO_INCREMENT, email varchar(200),name varchar(200), password varchar(200),type varchar(200))"
-      cur.execute(temp)
-      flag="INSERT INTO "+emailt+" (email,name,password,type) VALUES(%s,%s,%s,%s)"
-      cur.execute(flag,(email,name,password,typee))
-      mysql.connection.commit()
-      return redirect(url_for('userlogin')) 
-
-    def get(self):
-        headers = {'Content-Type': 'text/html'}
-        return make_response(render_template('register.html'),200,headers)
-
-
-def serialize_sets(obj):
-    if isinstance(obj, set):
-        return list(obj)
-
-    return obj
-
-
 
 class Dashboard(Resource):
     def __init__(self):
@@ -166,29 +105,26 @@ class Dashboard(Resource):
     def post(self):
         headers = {'Content-Type': 'text/html'}
         return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials'],title="Dashboard"),200,headers)
-
     
     def get(self):
         if session.get('logged_in') == True:
             headers = {'Content-Type': 'text/html'}
-            return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials'],title="Dashboard"),200,headers)
-
-           
+            return make_response(render_template('index2.html',user_name=session['user_name'],initials=session['initials'],title="Dashboard"),200,headers)   
         else:
             return redirect(url_for('userlogin')) 
 
+
 class Classifier(Resource):
+
     def post(self):
         f = request.files['file-name']
         basepath = os.path.dirname(__file__)
         file_path = os.path.join('uploads', secure_filename(f.filename))
-        print(file_path)
         f.save(file_path)
         reg_dic = extract(file_path) 
 
         if classify(reg_dic) == 1:
             senti_output = predict(reg_dic,True)
-            print(senti_output)
             headers = {'Content-Type':'text/html'}
             try:
                 if(request.form["param"]=="1"):
@@ -202,12 +138,10 @@ class Classifier(Resource):
                 return redirect(url_for('sentimental',text_data=senti_output,user_name=session['user_name'],initials=session['initials'],title="Feedback Form"),code=307)
         elif classify(reg_dic) == 2:
             dic = dict()
-            nlp = spacy.load('en')
             dic = transform(dic, nlp,reg_dic)
             for x in dic[0]:
                 if type(dic[0][x]) == set:
                     dic[0][x] = list(dic[0][x])
-            print('DATA CONTENT OF DIC[0]',dic[0])
             headers = {'Content-Type':'text/html'}
             keys = []
             values = []
@@ -220,12 +154,9 @@ class Classifier(Resource):
                         count = count+1
                     else:
                         values = row
-            print('keys',keys)
-            print('values',values)
             skills = []
             for i in range(len(keys)): 
                 skills.append([keys[i],values[i]]) 
-            print('skills',skills)
             try:
                 if(request.form["param"]=="1"):
                     return jsonify({
@@ -258,14 +189,11 @@ class Classifier(Resource):
 
 
 class Resume(Resource):
+
     def post(self):
-        print(type(request))
         f = request.files['file-name']
-        # print(request.form["param"])
-        # print(type(request.form['param']))
         basepath = os.path.dirname(__file__)
         file_path = os.path.join('uploads', secure_filename(f.filename))
-        print(file_path)
         f.save(file_path)
         resume_string = extract(file_path)                                            
         dic = dict()
@@ -275,7 +203,6 @@ class Resume(Resource):
             if type(dic[0][x]) == set:
                 dic[0][x] = list(dic[0][x])
         # dic[0] is tuple of lists(which contains key-value pair)
-        print('DATA CONTENT OF DIC[0]',dic[0])
         headers = {'Content-Type':'text/html'}
         keys = []
         values = []
@@ -288,12 +215,9 @@ class Resume(Resource):
                     count = count+1
                 else:
                     values = row
-        print('keys',keys)
-        print('values',values)
         skills = []
         for i in range(len(keys)): 
             skills.append([keys[i],values[i]]) 
-        print('skills',skills)
         try:
             if(request.form["param"] is not None and request.form["param"]=="1"):
                 return jsonify({
@@ -319,11 +243,9 @@ class Sentimental(Resource):
         f = request.files['file-name']
         basepath = os.path.dirname(__file__)
         file_path = os.path.join('uploads', secure_filename(f.filename))
-        print(file_path)
         f.save(file_path)
         reg_dic = extract(file_path)     
         senti_output = predict(reg_dic,True)
-        print(senti_output)
         headers = {'Content-Type':'text/html'}
         try:
             if(request.form["param"]=="1"):
@@ -347,13 +269,11 @@ class Summarizer(Resource):
         f = request.files['file-name']
         basepath = os.path.dirname(__file__)
         file_path = os.path.join('uploads', secure_filename(f.filename))
-        print(file_path)
         f.save(file_path)
         sents_in_summary = 5
         summary_string = extract(file_path)
         doc = nlp(summary_string)  
         text = generate_summary(doc,sents_in_summary)
-        print(text)
         headers = {'Content-Type':'text/html'}
         try:
             if(request.form["param"]=="1"):
@@ -382,68 +302,105 @@ class Logout(Resource):
         session.pop('logged_in', None)
         return redirect(url_for('userlogin'))
 
+
+class AppUserRegister(Resource):
+
+   def post(self):
+      data = request.get_json()
+      name = data['name']
+      email = data['email']
+      password = data['password']
+      typee = data['type']
+      email_string=''
+      for i in email:
+         if i == '@':
+            break
+         else:
+            email_string=email_string+i
+
+      cur = mysql.connection.cursor()
+      temp="CREATE TABLE if not exists "+email_string+" (id int PRIMARY KEY AUTO_INCREMENT, email varchar(200),name varchar(200), password varchar(200),type varchar(200))"
+      cur.execute(temp)
+      flag="INSERT INTO "+email_string+" (email,name,password,type) VALUES(%s,%s,%s,%s)"
+      cur.execute(flag,(email,name,password,typee))
+      mysql.connection.commit()
+      return {"message": "User created successfully."}, 201
+
+class AppUserLogin(Resource):
+    
+   def post(self):
+        data = request.get_json()
+        email = data['email']
+        password = data['password']
+        email_string=''
+        for i in email:
+         if i == '@':
+            break
+         else:
+            email_string=email_string+i
+        result=""
+        try:
+            string = "SELECT * FROM "+email_string+" WHERE email = '"+email+"' and password ='"+password+"' "
+            cur = mysql.connection.cursor()
+            cur.execute(string)
+            result = cur.fetchall()
+        finally:
+            if result == "":
+                  return {"email":email,"result":result,"logged":0}, 201
+            else:
+               return {"email":email,"result":result,"logged":1}, 201 
+
+
 class AppVoice(Resource):
 
-    
    def post(self):
       data = request.get_json()
       s=data                               
       palak=s['data']
       email=s['email'] 
-      emailj=''
-      print(email)
+      email_string=''
       for i in email:
          if i == '@':
             break
          else:
-            emailj=emailj+i
-      emailt = "".join((str(emailj),"voice"))
-      print(emailt)
+            email_string=email_string+i
+      email_string = "".join((str(email_string),"voice"))
    
-      
-      print(palak)
       cur = mysql.connection.cursor()
-      temp="CREATE TABLE if not exists "+emailt+" (voiceform varchar(2000))"
+      temp="CREATE TABLE if not exists "+email_string+" (voiceform varchar(2000))"
       cur.execute(temp)
       for i in palak:
          print(i)
-         sql = "INSERT INTO "+emailt+" VALUES (%s)"
+         sql = "INSERT INTO "+email_string+" VALUES (%s)"
          cur.execute(sql,[i])
       mysql.connection.commit()
-   
-            
+    
       return {"message": "voice done"}, 201
 
 
 class AppRetrieveVoice(Resource):
 
-    
    def post(self):
       data = request.get_json()
       email = data['email']
-      emailj=''
-      print(email)
+      email_string=''
       for i in email:
          if i == '@':
             break
          else:
-            emailj=emailj+i
-      emailt = "".join((str(emailj),"voice"))
-      string = "SELECT * FROM "+emailt+""
+            email_string=email_string+i
+      email_string = "".join((str(email_string),"voice"))
+      string = "SELECT * FROM "+email_string+""
       cur = mysql.connection.cursor()
       cur.execute(string)
       row = [item[0] for item in cur.fetchall()]
-      #response = cur.fetchall()
-      print(row)
       ans={'data':row}
-      print(ans)
       return ans
 
 class AppFormDetails(Resource):
 
    def post(self):
       data = request.get_json() #generate pdf @saif
-      print(data)
       form = VoiceForm()
       path_to_pdf = form.generatePDF(data)
       form.sendEmail(data['email'],path_to_pdf)
@@ -457,20 +414,15 @@ class AppEditProfile(Resource):
         email = data['email']
         password = data['password']
         name=data['username']
-        print(name)
-        print(email)
-        emailt=''
+        email_string=''
         result=""
         for i in email:
          if i == '@':
             break
          else:
-            emailt=emailt+i
-        print(emailt)
-        print("==================")
+            email_string=email_string+i
         try:
-            string="UPDATE "+emailt+" SET name='"+name+"',password='"+password+"' WHERE email='"+email+"'"
-            print(string)
+            string="UPDATE "+email_string+" SET name='"+name+"',password='"+password+"' WHERE email='"+email+"'"
             cur = mysql.connection.cursor()
             cur.execute(string)
             mysql.connection.commit()
@@ -480,14 +432,13 @@ class AppEditProfile(Resource):
 
             
 
-#jwt = JWT(app, authenticate, identity)
 api.add_resource(UserRegister, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(Dashboard, '/')
 api.add_resource(Inbox, '/inbox')
 api.add_resource(Classifier, '/classifier')
 api.add_resource(Resume, '/resume')
-api.add_resource(Sentimental, '/sentimental') #feedback
+api.add_resource(Sentimental, '/sentimental')
 api.add_resource(Summarizer, '/summarizer')
 api.add_resource(Logout, '/logout')
 api.add_resource(AppVoice, '/createvoicefields')
