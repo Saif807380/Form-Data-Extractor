@@ -8,3 +8,6 @@ tokenizer.pkl
 *.jpg
 *.jpeg
 *.pdf
+.env
+voiceforms
+uploads

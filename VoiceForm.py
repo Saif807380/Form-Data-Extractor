@@ -5,12 +5,13 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from flask import render_template
+import os
 
 class VoiceForm:
 
-    config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf') # add path to wkhtmlpdf
-    sender_address = 'youremail'
-    sender_pass = 'yourpassword'
+    config = pdfkit.configuration(wkhtmltopdf=os.environ.get("WKHTMLTOPDF_PATH")) # add path to wkhtmlpdf
+    sender_address = os.environ.get('SENDER_EMAIL')
+    sender_pass = os.environ.get('SENDER_PASSWORD')
 
     def __init__(self):
         print("")

@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import os
 import csv
+from dotenv import load_dotenv, find_dotenv
 from PIL import Image
 from werkzeug.utils import secure_filename
 from cloudmersive_api import extract
@@ -15,17 +16,18 @@ from text_summariser import generate_summary
 from ResumeAndFeedbackClassifier.test import classify
 from VoiceForm import VoiceForm
 
+load_dotenv(find_dotenv())
 os.environ['KERAS_BACKEND']='tensorflow'
 
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'	
-app.config['MYSQL_PASSWORD'] = 'yourpasswordhere'
+app.config['MYSQL_PASSWORD'] = os.environ.get("MYSQL_PASSWORD") or "Arrow807380"
 app.config['MYSQL_DB']	= 'team6nn' # manually create this database in mysql
 mysql = MySQL(app)
 api = Api(app)
 
-app.config['SECRET_KEY']='614E645267556B58703273357638792F'
+app.config['SECRET_KEY']=os.environ.get('SECRET_KEY')
 nlp=spacy.load('en_core_web_sm')
 
 
@@ -450,4 +452,4 @@ api.add_resource(AppEditProfile,'/appeditprofile')
 
 if __name__ == "__main__":
     
-    app.run(debug=True,port=5000)
+    app.run(debug=True,port=3000)
